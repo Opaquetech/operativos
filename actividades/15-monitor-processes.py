@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Actividad 15: Monitor de Procesos y Conexiones en Tiempo Real
-Autor: [Tu nombre]
+Autor: José Miguel Martínez Martínez
 Fecha: 20 de mayo de 2026
 
 Descripción:
@@ -19,12 +19,10 @@ Uso:
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox
 import psutil
 import csv
 from datetime import datetime
-import os
-import threading
 import logging
 
 # Configurar logging
@@ -64,8 +62,10 @@ class ProcessMonitorApp:
         self.root.geometry("1200x600")
         
         self.data = []
+        self.connection_first_seen = {}
         self.current_sort_col = None
         self.reverse_sort = False
+        self.refresh_job = None
         
         # Crear GUI
         self.create_widgets()
@@ -106,7 +106,7 @@ class ProcessMonitorApp:
         
         self.tree = ttk.Treeview(
             table_frame,
-            columns=('PID', 'Nombre', 'Dir_Local', 'Pto_Local', 'Dir_Remota', 'Pto_Remota', 'Estado', 'Mem'),
+            columns=('PID', 'Nombre', 'Dir_Local', 'Pto_Local', 'Dir_Remota', 'Pto_Remota', 'Estado', 'Tiempo_Enlace', 'Mem'),
             show='headings',
             yscrollcommand=scrollbar_y.set,
             xscrollcommand=scrollbar_x.set,
@@ -125,6 +125,7 @@ class ProcessMonitorApp:
             'Dir_Remota': 120,
             'Pto_Remota': 80,
             'Estado': 100,
+            'Tiempo_Enlace': 110,
             'Mem': 80
         }
         
@@ -144,6 +145,9 @@ class ProcessMonitorApp:
     def get_connections_data(self):
         """Obtener datos de conexiones de red."""
         data = []
+        now = datetime.now()
+        active_keys = set()
+
         try:
             for conn in psutil.net_connections(kind='inet'):
                 if conn.pid is None:
@@ -157,6 +161,22 @@ class ProcessMonitorApp:
                 local_port = conn.laddr.port if conn.laddr else "-"
                 remote_ip = conn.raddr.ip if conn.raddr else "-"
                 remote_port = conn.raddr.port if conn.raddr else "-"
+
+                conn_key = (
+                    proc_info['pid'],
+                    proc_info['name'],
+                    str(local_ip),
+                    str(local_port),
+                    str(remote_ip),
+                    str(remote_port),
+                    str(conn.status),
+                )
+                active_keys.add(conn_key)
+
+                if conn_key not in self.connection_first_seen:
+                    self.connection_first_seen[conn_key] = now
+
+                elapsed_seconds = int((now - self.connection_first_seen[conn_key]).total_seconds())
                 
                 data.append({
                     'pid': proc_info['pid'],
@@ -166,12 +186,25 @@ class ProcessMonitorApp:
                     'remote_ip': remote_ip,
                     'remote_port': str(remote_port),
                     'status': conn.status,
+                    'link_time_seconds': elapsed_seconds,
                     'memory': proc_info['memory']
                 })
         except (psutil.AccessDenied, psutil.Error) as e:
             logging.warning(f"Error al obtener conexiones: {e}")
+
+        # Eliminar entradas antiguas para no crecer indefinidamente.
+        stale_keys = [key for key in self.connection_first_seen if key not in active_keys]
+        for key in stale_keys:
+            del self.connection_first_seen[key]
         
         return data
+
+    def format_duration(self, seconds):
+        """Formatear segundos como HH:MM:SS."""
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        secs = seconds % 60
+        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
     
     def refresh_data(self):
         """Actualizar datos en tiempo real."""
@@ -182,12 +215,16 @@ class ProcessMonitorApp:
         count = len(self.data)
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.status_label.config(text=f"Conexiones: {count} | Última actualización: {timestamp}")
+        logging.info(f"Refresco en tiempo real: {count} conexiones detectadas")
         
         # Programar siguiente actualización (2 segundos)
-        self.root.after(2000, self.refresh_data)
+        self.refresh_job = self.root.after(2000, self.refresh_data)
     
     def manual_refresh(self):
         """Actualizar manualmente."""
+        if self.refresh_job is not None:
+            self.root.after_cancel(self.refresh_job)
+            self.refresh_job = None
         self.refresh_data()
         messagebox.showinfo("Actualización", "Datos actualizados manualmente")
     
@@ -207,6 +244,7 @@ class ProcessMonitorApp:
                 row['remote_ip'],
                 row['remote_port'],
                 row['status'],
+                self.format_duration(row['link_time_seconds']),
                 format_size(row['memory'])
             )
             self.tree.insert('', tk.END, values=values)
@@ -239,6 +277,7 @@ class ProcessMonitorApp:
             'Dir_Remota': 'remote_ip',
             'Pto_Remota': 'remote_port',
             'Estado': 'status',
+            'Tiempo_Enlace': 'link_time_seconds',
             'Mem': 'memory'
         }
         
@@ -270,7 +309,7 @@ class ProcessMonitorApp:
             with open(filename, 'w', newline='', encoding='utf-8') as f:
                 writer = csv.DictWriter(
                     f,
-                    fieldnames=['Timestamp', 'PID', 'Nombre', 'Dir_Local', 'Pto_Local', 'Dir_Remota', 'Pto_Remota', 'Estado', 'Memoria']
+                    fieldnames=['Timestamp', 'PID', 'Nombre', 'Dir_Local', 'Pto_Local', 'Dir_Remota', 'Pto_Remota', 'Estado', 'Tiempo_Enlace', 'Memoria']
                 )
                 writer.writeheader()
                 
@@ -284,6 +323,7 @@ class ProcessMonitorApp:
                         'Dir_Remota': row['remote_ip'],
                         'Pto_Remota': row['remote_port'],
                         'Estado': row['status'],
+                        'Tiempo_Enlace': self.format_duration(row['link_time_seconds']),
                         'Memoria': format_size(row['memory'])
                     })
             
