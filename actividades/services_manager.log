@@ -1,0 +1,4 @@
+2026-05-20 15:19:56,298 - INFO - Aplicación iniciada
+2026-05-20 15:20:10,825 - INFO - Servicio alsa-state.service iniciado
+2026-05-20 15:20:21,892 - ERROR - Error reloading logrotate.service: Failed to reload logrotate.service: Job type reload is not applicable for unit logrotate.service.
+
