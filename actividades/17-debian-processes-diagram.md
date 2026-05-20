@@ -48,16 +48,16 @@ Un proceso en Debian suele pasar por estados clásicos:
 
 ```mermaid
 flowchart TD
-	 K[Kernel] --> P1[systemd PID 1]
-	 P1 --> J[systemd-journald]
-	 P1 --> N[NetworkManager]
-	 P1 --> C[cron]
-	 P1 --> S[sshd]
-	 P1 --> U[user@1000.service]
-	 U --> SH[bash o zsh]
-	 SH --> A1[python script]
-	 SH --> A2[editor]
-	 SH --> A3[navegador]
+    K[Kernel] --> P1[systemd PID 1]
+    P1 --> J[systemd-journald]
+    P1 --> N[NetworkManager]
+    P1 --> C[cron]
+    P1 --> S[sshd]
+    P1 --> U[unidad user 1000 service]
+    U --> SH[bash o zsh]
+    SH --> A1[python script]
+    SH --> A2[editor]
+    SH --> A3[navegador]
 ```
 
 Interpretacion:
