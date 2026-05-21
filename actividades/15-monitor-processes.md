@@ -1,4 +1,4 @@
-# Actividad Adicional — Monitoreo de Procesos Activos del Sistema
+# Actividad Adicional pandoc 15-monitor-processes.md -o 15-monitor-processes.pdf— Monitoreo de Procesos Activos del Sistema
 
 ## Portada
 
@@ -72,20 +72,20 @@ En **Tkinter**, el evento loop se bloquea si realizamos operaciones largas. La s
 ## 3. Arquitectura del Programa
 
 ```
-┌─────────────────────────────────────────────┐
-│         ProcessMonitorApp (tkinter GUI)     │
-├─────────────────────────────────────────────┤
-│  - Ventana principal (root)                 │
-│  - Treeview: tabla de procesos/conexiones   │
-│  - Botones: Filtrar, Ordenar, Exportar      │
-│  - Frame de estado: log en tiempo real      │
-├─────────────────────────────────────────────┤
-│ Funciones de Recolección:                   │
-│  - get_processes()   → lista de procesos    │
-│  - get_connections() → conexiones activas   │
-│  - format_duration() → tiempo legible        │
-│  - safe_process_info() → info del proceso   │
-└─────────────────────────────────────────────┘
++---------------------------------------------+
+|         ProcessMonitorApp (tkinter GUI)     |
++---------------------------------------------+
+|  - Ventana principal (root)                 |
+|  - Treeview: tabla de procesos/conexiones   |
+|  - Botones: Filtrar, Ordenar, Exportar      |
+|  - Frame de estado: log en tiempo real      |
++---------------------------------------------+
+| Funciones de Recolección:                   |
+|  - get_processes()   -> lista de procesos   |
+|  - get_connections() -> conexiones activas  |
+|  - format_duration() -> tiempo legible      |
+|  - safe_process_info() -> info del proceso  |
++---------------------------------------------+
 ```
 
 ---
