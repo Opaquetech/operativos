@@ -283,6 +283,3 @@ La integración de `systemctl` con `tkinter` demuestra cómo automatizar tareas 
 
 ---
 
-**Anexo: Archivo de Programa**
-
-El código ejecutable se encuentra en: `actividades/16-services-gui.py`
