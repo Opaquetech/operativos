@@ -5,7 +5,7 @@
 **Proyecto:** Monitoreo en Tiempo Real de Procesos y Conexiones de Red  
 **Asignatura:** Sistemas Operativos  
 **Fecha:** 20 de mayo de 2026  
-**Estudiante:** [Tu nombre]  
+**Estudiante:** José Miguel Martínez Martínez  
 **Objetivo:** Crear una herramienta gráfica para supervisar procesos, puertos y conexiones activas en el sistema
 
 ---
