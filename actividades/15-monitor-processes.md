@@ -162,28 +162,28 @@ class ProcessMonitorApp:
 ## 7. Resultados de Ejecución
 
 ### 7.1 Captura 1: Interfaz Principal
-![Interfaz principal del monitor](../Fotos,%20reporte/Captura%20desde%202026-05-20%2022-25-48.png)
+![Interfaz principal del monitor](../Fotos_reporte/Captura%20desde%202026-05-20%2022-25-48.png)
 
 **Descripción:** La ventana principal muestra la tabla de conexiones activas del sistema en tiempo real. Se pueden ver las columnas de PID, nombre del proceso, dirección local, puerto local, dirección remota, puerto remoto y estado de la conexión.
 
 ---
 
 ### 7.2 Captura 2: Tabla con Datos de Procesos
-![Tabla de procesos y conexiones](../Fotos,%20reporte/Captura%20desde%202026-05-20%2022-26-38.png)
+![Tabla de procesos y conexiones](../Fotos_reporte/Captura%20desde%202026-05-20%2022-26-38.png)
 
 **Descripción:** Detalle de la tabla mostrando múltiples procesos conectados. Se observan procesos como sshd, systemd y otras aplicaciones del sistema con sus respectivas conexiones de red (LISTEN, ESTABLISHED, etc.).
 
 ---
 
 ### 7.3 Captura 3: Monitoreo en Tiempo Real
-![Monitoreo en tiempo real](../Fotos,%20reporte/Captura%20desde%202026-05-20%2022-26-49.png)
+![Monitoreo en tiempo real](../Fotos_reporte/Captura%20desde%202026-05-20%2022-26-49.png)
 
 **Descripción:** El programa actualiza la información cada 2 segundos. En esta captura se puede ver la barra de estado inferior que indica el número de conexiones activas y la última hora de actualización.
 
 ---
 
 ### 7.4 Captura 4: Búsqueda y Filtrado
-![Búsqueda y filtrado de procesos](../Fotos,%20reporte/Captura%20desde%202026-05-20%2022-27-44.png)
+![Búsqueda y filtrado de procesos](../Fotos_reporte/Captura%20desde%202026-05-20%2022-27-44.png)
 
 **Descripción:** La interfaz permite filtrar procesos en tiempo real. Se puede ver el campo de búsqueda en la parte superior izquierda, permitiendo buscar por nombre del proceso o PID para una visualización más enfocada.
 
