@@ -236,5 +236,4 @@ El uso de **psutil + tkinter** demuestra cómo integrar datos del SO con interfa
 
 ---
 
-**Anexo: Archivo de Programa**
 
