@@ -116,3 +116,5 @@
 2026-05-20 14:42:46,678 - INFO - Refresco en tiempo real: 175 conexiones detectadas
 2026-05-20 14:42:48,719 - INFO - Refresco en tiempo real: 176 conexiones detectadas
 2026-05-20 14:42:50,759 - INFO - Refresco en tiempo real: 176 conexiones detectadas
+2026-05-20 21:58:42,555 - INFO - Iniciando aplicación de monitoreo
+2026-05-20 21:58:42,569 - INFO - Aplicación iniciada correctamente

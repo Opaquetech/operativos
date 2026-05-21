@@ -1,0 +1,5 @@
+2026-05-20 19:43:30,975 - INFO - Aplicación iniciada
+2026-05-20 20:25:06,113 - INFO - Aplicación iniciada
+2026-05-20 20:29:26,187 - INFO - Aplicación iniciada
+2026-05-20 20:29:54,842 - INFO - Aplicación iniciada
+2026-05-20 20:30:15,928 - ERROR - Error starting alsa-state.service: Comando expirado (timeout)
