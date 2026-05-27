@@ -446,6 +446,23 @@ Realizar un resumen del diagrama de procesos de windows 11.
 ampliar la explicación utilizando otra documentación incluyendo AI.
 
 
+ACTIVIDAD FINAL 
+
+En python y utilizando tkinter:
+
+Realizar una interfaz gráfica del manejo de servicios en linux debian, ubuntu.
+
+Similar al programa systemctl.
+
+El programa debe mostrar todos los servicios activos, detener los servicios seleccionados, cargar servicios, desabilitar servicios. 
+
+Tomar en cuenta que algunos servicios para que puedan ser eliminados se tiene que remontar (mount) la particion en modo lectura y escritura, modificar el servicio y al final verificar que se vuelve a montar partición con sus atributos originales.
+
+Realizar un reporte amplio: portada, explicación de los servicios en Linux, programa bien documentado, varias corridas mostrando los diferentes usos, conclusión.
+
+
+
+
 
 
 

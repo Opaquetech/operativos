@@ -1,31 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Actividad 16: Gestor de Servicios con GUI (Debian/Ubuntu)
+Actividad Final: Gestor de Servicios con GUI (Debian/Ubuntu)
+Archivo: actividad_final.py
 Autor: [Tu nombre]
-Fecha: 20 de mayo de 2026
+Fecha: 27 de mayo de 2026
 
 Descripción:
     Interfaz gráfica para gestionar servicios systemd en Debian/Ubuntu.
-    Permite start, stop, restart, reload, enable, disable.
+    Similar a systemctl: listar, iniciar, detener, reiniciar, recargar,
+    habilitar, deshabilitar y editar archivos de unidad (.service) con
+    manejo seguro de particiones montadas en solo-lectura.
 
 Requisitos:
     - Python 3.6+
-    - Debian/Ubuntu
-    - tkinter (incluido)
-    - sudo sin contraseña configurado (opcional, o ingresarla en dialogo)
+    - Debian/Ubuntu (systemd)
+    - tkinter
+    - sudo (para operaciones privilegiadas)
 
 Uso:
-    python3 16-services-gui.py
-    
-    Nota: Algunos comandos requieren sudo. Configurar sudoers si es necesario:
-    sudo visudo
-    # Añadir línea:
-    # %sudo ALL=(ALL) NOPASSWD: /bin/systemctl
+    python3 "actividad final/actividad_final.py"
+
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox
 import subprocess
 import threading
 import logging
@@ -43,12 +42,11 @@ class ServicesManagerApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("Gestor de Servicios Systemd")
+        self.root.title("Actividad Final - Gestor de Servicios Systemd")
         self.root.geometry("1000x700")
         
         self.services = []
         self.current_service = None
-        self.sudo_password = None
         
         self.create_widgets()
         self.load_services()
@@ -57,14 +55,11 @@ class ServicesManagerApp:
     
     def create_widgets(self):
         """Crear componentes de la interfaz."""
-        
-        # Frame superior: controles
         top_frame = ttk.Frame(self.root)
         top_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
         
-        ttk.Label(top_frame, text="Gestor de Servicios Systemd", font=("Arial", 14, "bold")).pack(anchor=tk.W)
+        ttk.Label(top_frame, text="Actividad Final: Gestor de Servicios", font=("Arial", 14, "bold")).pack(anchor=tk.W)
         
-        # Frame de botones de control
         button_frame = ttk.Frame(top_frame)
         button_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
         
@@ -76,12 +71,11 @@ class ServicesManagerApp:
         ttk.Button(button_frame, text="Deshabilitar", command=self.disable_service).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Editar", command=self.edit_service).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Actualizar", command=self.reload_services).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Exportar CSV", command=self.export_csv).pack(side=tk.LEFT, padx=5)
         
-        # Frame principal: tabla
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Frame izquierdo: lista de servicios
         left_frame = ttk.Frame(main_frame)
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
@@ -97,7 +91,6 @@ class ServicesManagerApp:
             yscrollcommand=scrollbar.set,
             height=25
         )
-        
         scrollbar.config(command=self.tree.yview)
         
         self.tree.column('Servicio', width=300, anchor=tk.W)
@@ -111,29 +104,25 @@ class ServicesManagerApp:
         self.tree.bind('<<TreeviewSelect>>', self.on_service_select)
         self.tree.pack(fill=tk.BOTH, expand=True)
         
-        # Frame derecho: detalles
         right_frame = ttk.LabelFrame(main_frame, text="Detalles del Servicio", padding=10)
         right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, padx=(10, 0), expand=True)
         
         self.detail_text = tk.Text(right_frame, wrap=tk.WORD, height=30, width=40, state=tk.DISABLED)
         self.detail_text.pack(fill=tk.BOTH, expand=True)
         
-        # Frame inferior: log
         bottom_frame = ttk.LabelFrame(self.root, text="Log de Operaciones", padding=10)
         bottom_frame.pack(fill=tk.X, padx=10, pady=10)
         
         self.log_text = tk.Text(bottom_frame, wrap=tk.WORD, height=6, state=tk.DISABLED)
         self.log_text.pack(fill=tk.BOTH, expand=True)
     
-    def run_command(self, cmd, use_sudo=False):
+    def run_command(self, cmd, use_sudo=False, timeout=15):
         """Ejecutar comando en bash."""
         try:
             if use_sudo:
                 cmd = ['sudo'] + cmd
-            
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
             return result.returncode, result.stdout, result.stderr
-        
         except subprocess.TimeoutExpired:
             return 1, "", "Comando expirado (timeout)"
         except Exception as e:
@@ -143,18 +132,14 @@ class ServicesManagerApp:
         """Cargar lista de servicios desde systemctl."""
         def load_thread():
             try:
-                # Obtener lista de servicios
                 code, out, err = self.run_command(['systemctl', 'list-units', '--type', 'service', '--all', '--plain', '--no-pager'])
-                
                 if code != 0:
                     self.append_log(f"Error al obtener servicios: {err}")
                     return
-                
                 services = []
-                for line in out.strip().split('\n')[1:]:  # Skip header
+                for line in out.strip().split('\n')[1:]:
                     if not line.strip():
                         continue
-                    
                     parts = line.split()
                     if len(parts) >= 3:
                         name = parts[0]
@@ -162,32 +147,23 @@ class ServicesManagerApp:
                         services.append({
                             'name': name,
                             'state': state,
-                            'enabled': None  # Se obtiene después
+                            'enabled': None
                         })
-                
-                # Obtener estado de habilitación
                 for service in services:
                     code, out, err = self.run_command(['systemctl', 'is-enabled', service['name']])
                     service['enabled'] = 'yes' if code == 0 else 'no'
-                
                 self.services = services
                 self.display_services()
                 self.append_log(f"✓ Cargados {len(services)} servicios")
-            
             except Exception as e:
                 self.append_log(f"Error: {e}")
                 logging.error(f"Error loading services: {e}")
-        
-        # Cargar en thread para no bloquear UI
         threading.Thread(target=load_thread, daemon=True).start()
     
     def display_services(self):
         """Mostrar servicios en tabla."""
-        # Limpiar tabla
         for item in self.tree.get_children():
             self.tree.delete(item)
-        
-        # Insertar servicios
         for service in self.services:
             self.tree.insert('', tk.END, values=(
                 service['name'],
@@ -196,16 +172,12 @@ class ServicesManagerApp:
             ))
     
     def on_service_select(self, event):
-        """Cuando se selecciona un servicio."""
         selection = self.tree.selection()
         if not selection:
             return
-        
         item = selection[0]
         values = self.tree.item(item, 'values')
         service_name = values[0]
-        
-        # Buscar servicio en lista
         for service in self.services:
             if service['name'] == service_name:
                 self.current_service = service
@@ -213,105 +185,79 @@ class ServicesManagerApp:
                 break
     
     def show_service_details(self, service):
-        """Mostrar detalles del servicio seleccionado."""
         self.detail_text.config(state=tk.NORMAL)
         self.detail_text.delete('1.0', tk.END)
-        
         details = f"Servicio: {service['name']}\n"
         details += f"Estado: {service['state']}\n"
         details += f"Habilitado: {service['enabled']}\n"
         details += "─" * 40 + "\n"
-        
-        # Obtener descripción
         code, out, err = self.run_command(['systemctl', 'show', service['name'], '-p', 'Description', '--value'])
         if code == 0:
             details += f"Descripción: {out.strip()}\n"
-        
-        # Obtener estado detallado
         code, out, err = self.run_command(['systemctl', 'status', service['name']])
         if code == 0:
             details += "\nEstado Detallado:\n" + out[:500] + "\n..."
-        
         self.detail_text.insert('1.0', details)
         self.detail_text.config(state=tk.DISABLED)
     
     def get_service_name(self):
-        """Obtener nombre del servicio seleccionado."""
         if self.current_service:
             return self.current_service['name']
-        
         messagebox.showwarning("Advertencia", "Selecciona un servicio primero")
         return None
     
     def start_service(self):
-        """Iniciar servicio."""
         name = self.get_service_name()
         if not name:
             return
-        
         self.append_log(f"Iniciando {name}...")
         code, out, err = self.run_command(['systemctl', 'start', name], use_sudo=True)
-        
         if code == 0:
             self.append_log(f"✓ {name} iniciado")
             logging.info(f"Servicio {name} iniciado")
         else:
             self.append_log(f"✗ Error al iniciar {name}: {err}")
             logging.error(f"Error starting {name}: {err}")
-        
         self.reload_services()
     
     def stop_service(self):
-        """Detener servicio."""
         name = self.get_service_name()
         if not name:
             return
-        
         if not messagebox.askyesno("Confirmar", f"¿Detener {name}?"):
             return
-        
         self.append_log(f"Deteniendo {name}...")
         code, out, err = self.run_command(['systemctl', 'stop', name], use_sudo=True)
-        
         if code == 0:
             self.append_log(f"✓ {name} detenido")
             logging.info(f"Servicio {name} detenido")
         else:
             self.append_log(f"✗ Error al detener {name}: {err}")
             logging.error(f"Error stopping {name}: {err}")
-        
         self.reload_services()
     
     def restart_service(self):
-        """Reiniciar servicio."""
         name = self.get_service_name()
         if not name:
             return
-        
         if not messagebox.askyesno("Confirmar", f"¿Reiniciar {name}?"):
             return
-        
         self.append_log(f"Reiniciando {name}...")
         code, out, err = self.run_command(['systemctl', 'restart', name], use_sudo=True)
-        
         if code == 0:
             self.append_log(f"✓ {name} reiniciado")
             logging.info(f"Servicio {name} reiniciado")
         else:
             self.append_log(f"✗ Error al reiniciar {name}: {err}")
             logging.error(f"Error restarting {name}: {err}")
-        
         self.reload_services()
     
     def reload_service(self):
-        """Recargar servicio (sin parar)."""
         name = self.get_service_name()
         if not name:
             return
-        
         self.append_log(f"Recargando {name}...")
         code, out, err = self.run_command(['systemctl', 'reload', name], use_sudo=True)
-        
         if code == 0:
             self.append_log(f"✓ {name} recargado")
             logging.info(f"Servicio {name} recargado")
@@ -320,46 +266,36 @@ class ServicesManagerApp:
             logging.error(f"Error reloading {name}: {err}")
     
     def enable_service(self):
-        """Habilitar servicio en boot."""
         name = self.get_service_name()
         if not name:
             return
-        
         self.append_log(f"Habilitando {name} en boot...")
         code, out, err = self.run_command(['systemctl', 'enable', name], use_sudo=True)
-        
         if code == 0:
             self.append_log(f"✓ {name} habilitado")
             logging.info(f"Servicio {name} habilitado")
         else:
             self.append_log(f"✗ Error al habilitar {name}: {err}")
             logging.error(f"Error enabling {name}: {err}")
-        
         self.reload_services()
     
     def disable_service(self):
-        """Deshabilitar servicio en boot."""
         name = self.get_service_name()
         if not name:
             return
-        
         if not messagebox.askyesno("Confirmar", f"¿Deshabilitar {name} en boot?"):
             return
-        
         self.append_log(f"Deshabilitando {name}...")
         code, out, err = self.run_command(['systemctl', 'disable', name], use_sudo=True)
-        
         if code == 0:
             self.append_log(f"✓ {name} deshabilitado")
             logging.info(f"Servicio {name} deshabilitado")
         else:
             self.append_log(f"✗ Error al deshabilitar {name}: {err}")
             logging.error(f"Error disabling {name}: {err}")
-        
         self.reload_services()
 
     def get_fragment_path(self, service_name):
-        """Obtener la ruta del archivo de unidad (.service) para el servicio."""
         code, out, err = self.run_command(['systemctl', 'show', service_name, '-p', 'FragmentPath', '--value'])
         if code == 0:
             path = out.strip()
@@ -367,75 +303,52 @@ class ServicesManagerApp:
         return None
 
     def remount_if_needed(self, path, make_rw=True):
-        """Remontar la partición que contiene `path` como rw/ro según make_rw.
-        Devuelve True si realizó un remount (y hay que restaurar luego), False en caso contrario.
-        """
         try:
-            # Obtener punto de montaje y opciones
             code, mp_out, mp_err = self.run_command(['findmnt', '-n', '-o', 'TARGET,OPTIONS', '--target', path])
             if code != 0 or not mp_out.strip():
                 return False
-
             parts = mp_out.strip().split()
             mountpoint = parts[0]
             options = parts[1] if len(parts) > 1 else ''
-
             if make_rw:
                 if 'ro' in options.split(','):
-                    # Remontar como rw
                     code, out, err = self.run_command(['mount', '-o', 'remount,rw', mountpoint], use_sudo=True)
                     return code == 0
                 return False
             else:
-                # Remontar como ro
                 code, out, err = self.run_command(['mount', '-o', 'remount,ro', mountpoint], use_sudo=True)
                 return code == 0
-
         except Exception:
             return False
 
     def edit_service(self):
-        """Abrir editor simple para el archivo de unidad del servicio y guardar cambios de forma segura."""
         name = self.get_service_name()
         if not name:
             return
-
         frag = self.get_fragment_path(name)
         if not frag:
             messagebox.showinfo("Info", "No se encontró archivo de unidad para este servicio")
             return
-
-        # Leer contenido (con sudo si es necesario)
         code, out, err = self.run_command(['cat', frag], use_sudo=True)
         content = out if code == 0 else ''
-
-        # Ventana de edición
         edit_win = tk.Toplevel(self.root)
         edit_win.title(f"Editar: {frag}")
         edit_win.geometry("800x600")
-
         txt = tk.Text(edit_win, wrap=tk.NONE)
         txt.insert('1.0', content)
         txt.pack(fill=tk.BOTH, expand=True)
-
         btn_frame = ttk.Frame(edit_win)
         btn_frame.pack(fill=tk.X)
-
         def save_and_close():
             new_content = txt.get('1.0', tk.END)
-
-            # Guardar en temporal
             import tempfile, os
             fd, tmp_path = tempfile.mkstemp(prefix='svc_edit_', text=True)
             os.close(fd)
             with open(tmp_path, 'w', encoding='utf-8') as f:
                 f.write(new_content)
-
             remounted = False
             try:
                 remounted = self.remount_if_needed(frag, make_rw=True)
-
-                # Copiar el tmp al destino usando sudo
                 code, out, err = self.run_command(['cp', tmp_path, frag], use_sudo=True)
                 if code == 0:
                     self.append_log(f"✓ Archivo {frag} guardado")
@@ -445,38 +358,45 @@ class ServicesManagerApp:
                     self.append_log(f"✗ Error guardando {frag}: {err}")
                     logging.error(f"Error guardando {frag}: {err}")
                     messagebox.showerror("Error", f"No se pudo guardar: {err}")
-
             finally:
                 try:
                     os.remove(tmp_path)
                 except Exception:
                     pass
-
                 if remounted:
                     self.remount_if_needed(frag, make_rw=False)
-
             edit_win.destroy()
-
         ttk.Button(btn_frame, text="Guardar", command=save_and_close).pack(side=tk.RIGHT, padx=5, pady=5)
         ttk.Button(btn_frame, text="Cancelar", command=edit_win.destroy).pack(side=tk.RIGHT, padx=5, pady=5)
-    
+
     def reload_services(self):
-        """Recargar lista de servicios."""
         self.load_services()
-    
+
     def append_log(self, message):
-        """Añadir mensaje al log visual."""
         self.log_text.config(state=tk.NORMAL)
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.log_text.insert(tk.END, f"[{timestamp}] {message}\n")
         self.log_text.see(tk.END)
-        
-        # Limitar líneas del log
         lines = self.log_text.get('1.0', tk.END).split('\n')
         if len(lines) > 100:
             self.log_text.delete('1.0', '100.0')
-        
         self.log_text.config(state=tk.DISABLED)
+
+    def export_csv(self):
+        try:
+            import csv
+            fname = 'services_report.csv'
+            with open(fname, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerow(['timestamp', 'service', 'state', 'enabled'])
+                ts = datetime.now().isoformat()
+                for s in self.services:
+                    writer.writerow([ts, s.get('name'), s.get('state'), s.get('enabled')])
+            self.append_log(f"✓ Exportado CSV: {fname}")
+            messagebox.showinfo("Exportado", f"CSV guardado: {fname}")
+        except Exception as e:
+            self.append_log(f"✗ Error exportando CSV: {e}")
+            logging.error(f"Error exportando CSV: {e}")
 
 def main():
     root = tk.Tk()

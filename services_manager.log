@@ -3,3 +3,11 @@
 2026-05-20 20:29:26,187 - INFO - Aplicación iniciada
 2026-05-20 20:29:54,842 - INFO - Aplicación iniciada
 2026-05-20 20:30:15,928 - ERROR - Error starting alsa-state.service: Comando expirado (timeout)
+2026-05-27 10:45:24,830 - INFO - Aplicación iniciada
+2026-05-27 10:45:37,370 - INFO - Servicio alsa-restore.service iniciado
+2026-05-27 10:46:44,912 - INFO - Servicio alsa-restore.service reiniciado
+2026-05-27 10:46:47,037 - INFO - Servicio alsa-restore.service iniciado
+2026-05-27 10:46:53,035 - INFO - Servicio alsa-restore.service iniciado
+2026-05-27 10:47:15,948 - INFO - Servicio alsa-restore.service detenido
+2026-05-27 10:47:39,877 - INFO - Servicio alsa-restore.service habilitado
+2026-05-27 10:48:04,759 - INFO - Servicio alsa-restore.service deshabilitado
